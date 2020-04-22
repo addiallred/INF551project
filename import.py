@@ -2,16 +2,28 @@ import mysql.connector
 import sys
 import requests
 import datetime
-from decimal import Decimal
+import decimal
 import json
 import csv
 
-
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        if isinstance(o, (datetime.date, datetime.datetime)):
+        	return o.__str__()
+        return super(DecimalEncoder, self).default(o)
+       
+    
 #connect to fire base and write the data into the firebase
 def firebaseDB(finalRes, databaseN):
+	with open("res.txt", 'w') as f:
+		print(finalRes, file=f)
+	
+	#print(finalRes)
 	#get firebase url and do resquest dumping the data to a json object
 	fireURL = 'https://project551-5d799.firebaseio.com/' + databaseN + '/.json'
-	results = requests.put(fireURL, data=json.dumps(finalRes))
+	results = requests.put(fireURL, data=json.dumps(finalRes,  cls=DecimalEncoder))
 #connect and reead from db
 def connectDB(databaseN):
 	#connect to the database provided
@@ -42,21 +54,33 @@ def connectDB(databaseN):
 	finalRes = {}
 	#iterate to query through all tables
 	for table in tables:
-		
 		currC = columns[table]
 		queryT = "SELECT * FROM " + table 
 		cursor.execute(queryT)
 		tableData = {}
+		test = {}
 		for row in cursor:
 			tableData[row[0]] = []
 			for i in range(len(row)):
-				if i != 0:
-					if type(row[i]) is Decimal:
-						tableData[row[0]].append(float(row[i]))
-					elif isinstance(row[i], datetime.date):
-						tableData[row[0]].append(row[i].__str__())
-					else:
-						tableData[row[0]].append(row[i])
+				words = []
+				if(isinstance(row[i], str)):
+					split = row[i].lower()
+					words = split.split(" ")
+				elif isinstance(row[i], decimal.Decimal):
+        			 word = float(row[i])
+				else: 
+					words.append(str(row[i]))
+				for word in words:
+					key = word
+					if(isinstance(word, str)):
+						key = word.lower()
+						key = ''.join(e for e in key if e.isalnum())
+					if key: 
+						if key in tableData.keys():
+							tableData[key].append(row)
+						else:
+							tableData[key] = []
+							tableData[key].append(row)
 		finalRes[table] = tableData
 	firebaseDB(finalRes, databaseN)
 		#add each row in the query to the csv

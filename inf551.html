@@ -6,6 +6,8 @@
 	<title>DataBase Search</title>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 	<link rel="stylesheet" type="text/css" href="inf551.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 	<style>
 		.form-check-label {
 			padding-top: calc(.5rem - 1px * 2);
@@ -15,6 +17,7 @@
 	</style>
 </head>
 <body>
+	<div id="res"></div>
 	<ol class="breadcrumb">
 		<li class="breadcrumb-item active">Search</li>
 	</ol>
@@ -24,17 +27,17 @@
 		</div> <!-- .row -->
 	</div> <!-- .container -->
 	<div class="container">
-		<form action="search_results.php" method="GET">
+		<form id="search-form">
 			<div class="form-group row" id="formc">
 				<div class="col-sm-9">
 					<input type="text" class="form-control" id="title-id" name="title">
 				</div>
 				<div class="col-sm-3">
-					<select name="genre" id="genre-id" class="form-control">
+					<select name="data" id="database" class="form-control">
 						<option value="" selected>-- Select DataBase to Search --</option>
 						<option value="world">World DataBase</option>
-						<option value="world">Movie DataBase</option>
-						<option value="world">Song DataBase</option>
+						<option value="movie">Movie DataBase</option>
+						<option value="song">Song DataBase</option>
 					</select>
 				</div>
 			</div> <!-- .form-group -->
@@ -43,37 +46,17 @@
 			</div> <!-- .form-group -->
 			</div> <!-- .form-group -->
 		</form>
-		<table class="table table-dark">
-	  <thead>
-	    <tr>
-	      <th scope="col">DATA</th>
-	      <th scope="col">DATA</th>
-	      <th scope="col">DATA</th>
-	      <th scope="col">DATA</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    <tr>
-	      <th scope="row">DATA</th>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	    </tr>
-	    <tr>
-	      <th scope="row">DATA</th>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	    </tr>
-	    <tr>
-	      <th scope="row">DATA</th>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	      <td>DATA</td>
-	    </tr>
-	  </tbody>
-	</table>
+		<table class="table table-dark" id="myTable">
+	  		
+		</table>
+		<div class="container ">
+    		<div id="pagination-wrapper"></div>
+		</div>
+		
 	</div> <!-- .container -->
+	<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-database.js"></script>
 
+<script src="inf551.js"></script>
 </body>
 </html>
