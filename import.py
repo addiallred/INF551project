@@ -5,6 +5,7 @@ import datetime
 import decimal
 import json
 import csv
+from decimal import Decimal
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -19,7 +20,6 @@ class DecimalEncoder(json.JSONEncoder):
 def firebaseDB(finalRes, databaseN):
 	with open("res.txt", 'w') as f:
 		print(finalRes, file=f)
-	
 	#print(finalRes)
 	#get firebase url and do resquest dumping the data to a json object
 	fireURL = 'https://project551-5d799.firebaseio.com/' + databaseN + '/.json'
@@ -60,6 +60,8 @@ def connectDB(databaseN):
 		tableData = {}
 		test = {}
 		for row in cursor:
+			row = list(row)
+			row.append(table)
 			tableData[row[0]] = []
 			for i in range(len(row)):
 				words = []
@@ -77,12 +79,28 @@ def connectDB(databaseN):
 						key = ''.join(e for e in key if e.isalnum())
 					if key: 
 						if key in tableData.keys():
-							tableData[key].append(row)
+							if row not in tableData[key]: 
+								tableData[key].append(row)
 						else:
 							tableData[key] = []
 							tableData[key].append(row)
 		finalRes[table] = tableData
-	firebaseDB(finalRes, databaseN)
+	foreginKeys = {}
+	for table in tables:
+		
+		currC = columns[table]
+		queryT = "SELECT * FROM " + table 
+		cursor.execute(queryT)
+		tableData = {}
+		for row in cursor:
+			row = list(row)
+			row.append(table)
+			tableData[row[0]] = row
+		foreginKeys[table] = tableData
+		final = {}
+		final["search"] = finalRes
+		final["f_keys"] = foreginKeys
+	firebaseDB(final, databaseN)
 		#add each row in the query to the csv
 	#close cursor and connection
 	cursor.close()

@@ -21,3 +21,9 @@ body{
 	margin-bottom: 30px;
 	margin-right: 20px;
 }
+.foreignK{
+	color: #9FDAE3;
+}
+.foreignK:hover{
+	color: #6B9399;
+}

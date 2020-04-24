@@ -23,7 +23,7 @@
     'window': 5,
 }
 
-
+	var cityFk = 2;
 
 	function pagination(querySet, page, rows) {
 
@@ -93,27 +93,178 @@
 	        $('#myTable').empty()
 
 	        state.page = Number($(this).val())
-
-	        buildTable()
+	        const database = document.querySelector('#database');
+	        buildTable(database.value);
 	    })
 
 	}
 
+	function foreignKeyW(key){
+		var Parent = document.getElementById("myTable");
+		while(Parent.hasChildNodes())
+		{
+   			Parent.removeChild(Parent.firstChild);
+		}
+		var dbRef = firebase.database().ref().child("world").child("f_keys").child("country").child(key);
+		dbRef.once('value', snapshot=>{
+			if (snapshot){
+				var res = JSON.stringify(snapshot.val());
+				var myObj = JSON.parse(res);
+				console.log(myObj);
+				if(myObj != null){
+				    state.querySet.push(myObj);
+				}
+				console.log(state.querySet);
+				buildTable("world");
+			}
+		});
+		
+	}
 
-	function buildTable() {
-	    var table = $('#myTable')
-
+	function buildTableW(){
+		var table = $('#myTable');
 	    var data = pagination(state.querySet, state.page, state.rows)
 	    var table = document.getElementById("myTable");
 	    for(var i = 0; i < data.querySet.length; i++){
 			var row = table.insertRow();
-			for(var l = 0; l < data.querySet[i].length; l++){
-				 var cell = row.insertCell();
-				 cell.innerHTML = data.querySet[i][l];
+			if(data.querySet[i][data.querySet[i].length-1] == "city"){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+					var cell = row.insertCell();
+					if(l == cityFk){
+						cell.innerHTML = data.querySet[i][l];
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyW(this.innerHTML);
+						};
+					}
+					else{
+						cell.innerHTML = data.querySet[i][l];
+					}
+				 	
+				}
 			}
+			else if(data.querySet[i][data.querySet[i].length-1] == "country"){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+					var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+				}
+			}
+			else{
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+					var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+				}
+			}
+			
 	    }
 
 	    pageButtons(data.pages)
+	}
+	function foreignKeyM(key, table){
+		var Parent = document.getElementById("myTable");
+		while(Parent.hasChildNodes())
+		{
+   			Parent.removeChild(Parent.firstChild);
+		}
+		var dbRef = firebase.database().ref().child("movies").child("f_keys").child(table).child(key);
+		dbRef.once('value', snapshot=>{
+			if (snapshot){
+				var res = JSON.stringify(snapshot.val());
+				var myObj = JSON.parse(res);
+				console.log(myObj);
+				if(myObj != null){
+				    state.querySet.push(myObj);
+				}
+				console.log(state.querySet);
+				buildTable("movie");
+			}
+		});
+	}
+	function buildTableS(){
+		var table = $('#myTable');
+		var data = pagination(state.querySet, state.page, state.rows)
+	    var table = document.getElementById("myTable");
+	    for(var i = 0; i < data.querySet.length; i++){
+			var row = table.insertRow();
+			for(var l = 0; l < data.querySet[i].length; l++){
+			 var cell = row.insertCell();
+				 cell.innerHTML = data.querySet[i][l];
+			}
+	    }
+	    pageButtons(data.pages)
+	}
+	function buildTableM(){
+		var table = $('#myTable');
+		var data = pagination(state.querySet, state.page, state.rows)
+	    var table = document.getElementById("myTable");
+	    for(var i = 0; i < data.querySet.length; i++){
+			var row = table.insertRow();
+			if(data.querySet[i][data.querySet[i].length-1] == "dvd_titles"){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+					var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+					if(l == 4){
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyM(this.innerHTML, "labels");
+						};
+					}
+				 	else if(l == 5){
+				 		cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyM(this.innerHTML, "sounds");
+						};
+				 	}
+				 	else if(l == 6){
+				 		cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyM(this.innerHTML, "genres");
+						};
+				 	}
+				 	else if(l == 7){
+				 		cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyM(this.innerHTML, "ratings");
+						};
+				 	}
+				 	else if(l == 8){
+				 		cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyM(this.innerHTML, "formats");
+						};
+				 	}
+				}
+			}
+			else{
+				for(var l = 0; l < data.querySet[i].length; l++){
+					var cell = row.insertCell();
+				 	cell.innerHTML = data.querySet[i][l];
+				}
+			}
+	    }
+	    pageButtons(data.pages)
+	}
+	function buildTable(dataBase) {
+		if(dataBase == "world"){
+			buildTableW();
+		}
+		else if(dataBase == "movie")
+		{
+			buildTableM();
+		}
+		else{
+		    var table = $('#myTable');
+		    var data = pagination(state.querySet, state.page, state.rows)
+		    var table = document.getElementById("myTable");
+		    for(var i = 0; i < data.querySet.length; i++){
+				var row = table.insertRow();
+				for(var l = 0; l < data.querySet[i].length; l++){
+					 var cell = row.insertCell();
+					 cell.innerHTML = data.querySet[i][l];
+				}
+		    }
+		    pageButtons(data.pages)
+		}
 	}
   function worldSearch(searchInput){
   		var search = searchInput.split(" ");
@@ -121,7 +272,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("world").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("world").child("search").child(tables[i]).child(search[j]);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot){
@@ -133,7 +284,7 @@
 				    	}
 				    }
 				    if(index == tables.length-1){
-  						buildTable();
+  						buildTable("world");
 				    }
 				   }
 				});
@@ -149,7 +300,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("movies").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(search[j]);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
@@ -161,7 +312,7 @@
 				    	}
 				    }
 				    if(index == tables.length-1){
-  						buildTable();
+  						buildTable("movie");
 				    }
 				   }
 				});
@@ -176,7 +327,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("movies").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(search[j]);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
@@ -188,7 +339,7 @@
 				    	}
 				    }
 				    if(index == tables.length-1){
-  						buildTable();
+  						buildTable("song");
 				    }
 				  }
 				});
