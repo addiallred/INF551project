@@ -21,6 +21,7 @@ def firebaseDB(finalRes, databaseN):
 	with open("res.txt", 'w') as f:
 		print(finalRes, file=f)
 	#print(finalRes)
+	
 	#get firebase url and do resquest dumping the data to a json object
 	fireURL = 'https://project551-5d799.firebaseio.com/' + databaseN + '/.json'
 	results = requests.put(fireURL, data=json.dumps(finalRes,  cls=DecimalEncoder))
@@ -95,7 +96,11 @@ def connectDB(databaseN):
 		for row in cursor:
 			row = list(row)
 			row.append(table)
-			tableData[row[0]] = row
+			if row[0] in tableData:
+				tableData[row[0]].append(row)
+			else:
+				tableData[row[0]] = []
+				tableData[row[0]].append(row)
 		foreginKeys[table] = tableData
 		final = {}
 		final["search"] = finalRes

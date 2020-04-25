@@ -29,7 +29,6 @@
 
 	    var trimStart = (page - 1) * rows
 	    var trimEnd = trimStart + rows
-	    console.log(querySet.length)
 	    var trimmedData = [];
 	    var add = true;
 	    for(var i = trimStart; i <= trimEnd; i++){
@@ -41,11 +40,7 @@
 	    	}
 	 
 	    }
-	    console.log(trimmedData);
-	    console.log(querySet.length)
 	    var pages = Math.ceil(querySet.length / rows);
-	    console.log(pages)
-
 	    return {
 	        'querySet': trimmedData,
 	        'pages': pages,
@@ -54,18 +49,13 @@
 
 	function pageButtons(pages) {
 	    var wrapper = document.getElementById('pagination-wrapper')
-
 	    wrapper.innerHTML = ``
-		console.log('Pages:', pages)
-
 	    var maxLeft = (state.page - Math.floor(state.window / 2))
 	    var maxRight = (state.page + Math.floor(state.window / 2))
-
 	    if (maxLeft < 1) {
 	        maxLeft = 1
 	        maxRight = state.window
 	    }
-
 	    if (maxRight > pages) {
 	        maxLeft = pages - (state.window - 1)
 	        
@@ -74,13 +64,9 @@
 	        }
 	        maxRight = pages
 	    }
-	    
-	    
-
 	    for (var page = maxLeft; page <= maxRight; page++) {
 	    	wrapper.innerHTML += `<button value=${page} class="page btn btn-sm btn-info">${page}</button>`
 	    }
-
 	    if (state.page != 1) {
 	        wrapper.innerHTML = `<button value=${1} class="page btn btn-sm btn-info">&#171; First</button>` + wrapper.innerHTML
 	    }
@@ -98,7 +84,46 @@
 	    })
 
 	}
-
+	function city(key){
+		console.log(key);
+		key = key.toLowerCase();
+		var dbRef = firebase.database().ref().child("world").child("search").child("city").child(key);
+		dbRef.once('value', snapshot=>{
+		  if (snapshot){
+		    	var res = JSON.stringify(snapshot.val());
+		  	    var myObj = JSON.parse(res);
+			    if(myObj != null){
+		    	for(var k = 0; k < myObj.length; k++){
+		    		state.querySet.push(myObj[k]);
+		    	}
+		       }
+			}
+			buildTable("world");
+			
+ 		});
+	}
+	function primaryKeyW(key){
+		var Parent = document.getElementById("myTable");
+		while(Parent.hasChildNodes())
+		{
+   			Parent.removeChild(Parent.firstChild);
+		}
+		var dbRef = firebase.database().ref().child("world").child("f_keys").child("countrylanguage").child(key);
+		dbRef.once('value', snapshot=>{
+		  if (snapshot){
+		    var res = JSON.stringify(snapshot.val());
+		  	    var myObj = JSON.parse(res);
+			    if(myObj != null){
+		    	for(var k = 0; k < myObj.length; k++){
+		    		state.querySet.push(myObj[k]);
+		    	}
+		       }
+			}
+			city(key);
+ 		});
+		
+		
+	}
 	function foreignKeyW(key){
 		var Parent = document.getElementById("myTable");
 		while(Parent.hasChildNodes())
@@ -110,11 +135,11 @@
 			if (snapshot){
 				var res = JSON.stringify(snapshot.val());
 				var myObj = JSON.parse(res);
-				console.log(myObj);
 				if(myObj != null){
-				    state.querySet.push(myObj);
+					for(var k = 0; k < myObj.length; k++){
+				    	state.querySet.push(myObj[k]);
+				    }
 				}
-				console.log(state.querySet);
 				buildTable("world");
 			}
 		});
@@ -146,13 +171,31 @@
 			else if(data.querySet[i][data.querySet[i].length-1] == "country"){
 				for(var l = 0; l < data.querySet[i].length-1; l++){
 					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
+					if(l == 0){
+						cell.innerHTML = data.querySet[i][l];
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    primaryKeyW(this.innerHTML);
+						};
+					}
+					else{
+						cell.innerHTML = data.querySet[i][l];
+					}
 				}
 			}
 			else{
 				for(var l = 0; l < data.querySet[i].length-1; l++){
 					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
+					if(l == 0){
+						cell.innerHTML = data.querySet[i][l];
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyW(this.innerHTML);
+						};
+					}
+					else{
+						cell.innerHTML = data.querySet[i][l];
+					}
 				}
 			}
 			
@@ -171,24 +214,85 @@
 			if (snapshot){
 				var res = JSON.stringify(snapshot.val());
 				var myObj = JSON.parse(res);
-				console.log(myObj);
 				if(myObj != null){
-				    state.querySet.push(myObj);
+				    for(var k = 0; k < myObj.length; k++){
+				    	state.querySet.push(myObj[k]);
+				    }
 				}
-				console.log(state.querySet);
-				buildTable("movie");
 			}
+			buildTable("movie");
+		});
+	}
+	function foreignKeyS(key, table){
+		var Parent = document.getElementById("myTable");
+		while(Parent.hasChildNodes())
+		{
+   			Parent.removeChild(Parent.firstChild);
+		}
+		var dbRef = firebase.database().ref().child("songs").child("f_keys").child(table).child(key);
+		dbRef.once('value', snapshot=>{
+			if (snapshot){
+				var res = JSON.stringify(snapshot.val());
+				var myObj = JSON.parse(res);
+				if(myObj != null){
+				    for(var k = 0; k < myObj.length; k++){
+				    	state.querySet.push(myObj[k]);
+				    }
+				}
+			}
+			buildTable("song");
 		});
 	}
 	function buildTableS(){
+		console.log("in here");
 		var table = $('#myTable');
 		var data = pagination(state.querySet, state.page, state.rows)
 	    var table = document.getElementById("myTable");
+	    console.log(data.querySet);
 	    for(var i = 0; i < data.querySet.length; i++){
 			var row = table.insertRow();
-			for(var l = 0; l < data.querySet[i].length; l++){
-			 var cell = row.insertCell();
-				 cell.innerHTML = data.querySet[i][l];
+			if(data.querySet[i][data.querySet[i].length-1] == "albums"){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+					var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+					if(l == 2){
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyS(this.innerHTML, "artists");
+						};
+					}
+				}
+			}
+			else if(data.querySet[i][data.querySet[i].length-1] == "tracks"){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+				 	var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+					if(l == 2){
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyS(this.innerHTML, "albums");
+						};
+					}
+					else if(l == 3){
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyS(this.innerHTML, "media_types");
+						};
+					}
+					else if(l == 4){
+						cell.setAttribute("class", "foreignK");
+						cell.onclick = function () {
+						    foreignKeyS(this.innerHTML, "genres");
+						};
+					}
+				}
+			}
+			else{
+				for(var l = 0; l < data.querySet[i].length-1; l++){
+				 	var cell = row.insertCell();
+					cell.innerHTML = data.querySet[i][l];
+					console.log(data.querySet[i][l]);
+				}
 			}
 	    }
 	    pageButtons(data.pages)
@@ -236,7 +340,7 @@
 				}
 			}
 			else{
-				for(var l = 0; l < data.querySet[i].length; l++){
+				for(var l = 0; l < data.querySet[i].length-1; l++){
 					var cell = row.insertCell();
 				 	cell.innerHTML = data.querySet[i][l];
 				}
@@ -252,18 +356,8 @@
 		{
 			buildTableM();
 		}
-		else{
-		    var table = $('#myTable');
-		    var data = pagination(state.querySet, state.page, state.rows)
-		    var table = document.getElementById("myTable");
-		    for(var i = 0; i < data.querySet.length; i++){
-				var row = table.insertRow();
-				for(var l = 0; l < data.querySet[i].length; l++){
-					 var cell = row.insertCell();
-					 cell.innerHTML = data.querySet[i][l];
-				}
-		    }
-		    pageButtons(data.pages)
+		else if(dataBase == "song"){
+			buildTableS();
 		}
 	}
   function worldSearch(searchInput){
@@ -272,7 +366,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("world").child("search").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("world").child("search").child(tables[i]).child(searchW);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot){
@@ -300,7 +394,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(searchW);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
@@ -327,7 +421,7 @@
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(search[j]);
+	  			var dbRef = firebase.database().ref().child("songs").child("search").child(tables[i]).child(searchW);
 	  			const index = i;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
@@ -364,5 +458,7 @@
 	else if(database.value == "movie"){
 		movieSearch(searchInput);
 	}
-  	
+  	else if(database.value == "song"){
+  		songSearch(searchInput);
+  	}
 };
