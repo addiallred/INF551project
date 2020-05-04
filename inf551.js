@@ -232,63 +232,6 @@
 		world.country = [];
 		world.countrylanguage = [];
 	}
-	// function buildTableW(){
-	// 	var table = $('#myTable');
-	//     var data = pagination(state.querySet, state.page, state.rows)
-	//     var table = document.getElementById("myTable");
-	//     for(var i = 0; i < data.querySet.length; i++){
-	// 		var row = table.insertRow();
-	// 		if(data.querySet[i][data.querySet[i].length-1] == "city"){
-	// 			for(var l = 0; l < data.querySet[i].length-1; l++){
-	// 				var cell = row.insertCell();
-	// 				if(l == cityFk){
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 					cell.setAttribute("class", "foreignK");
-	// 					cell.onclick = function () {
-	// 					    foreignKeyW(this.innerHTML);
-	// 					};
-	// 				}
-	// 				else{
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 				}
-				 	
-	// 			}
-	// 		}
-	// 		else if(data.querySet[i][data.querySet[i].length-1] == "country"){
-	// 			for(var l = 0; l < data.querySet[i].length-1; l++){
-	// 				var cell = row.insertCell();
-	// 				if(l == 0){
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 					cell.setAttribute("class", "foreignK");
-	// 					cell.onclick = function () {
-	// 					    primaryKeyW(this.innerHTML);
-	// 					};
-	// 				}
-	// 				else{
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 				}
-	// 			}
-	// 		}
-	// 		else{
-	// 			for(var l = 0; l < data.querySet[i].length-1; l++){
-	// 				var cell = row.insertCell();
-	// 				if(l == 0){
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 					cell.setAttribute("class", "foreignK");
-	// 					cell.onclick = function () {
-	// 					    foreignKeyW(this.innerHTML);
-	// 					};
-	// 				}
-	// 				else{
-	// 					cell.innerHTML = data.querySet[i][l];
-	// 				}
-	// 			}
-	// 		}
-			
-	//     }
-
-	//     pageButtons(data.pages)
-	//}
 	function foreignKeyM(key, table){
 		var Parent = document.getElementById("myTable");
 		while(Parent.hasChildNodes())
@@ -657,3 +600,9 @@
   		songSearch(searchInput);
   	}
 };
+
+
+
+
+
+
