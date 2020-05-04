@@ -8,8 +8,22 @@
 }
 .table{
 	width: 80% !important;
-	margin-left: 10%;
+	margin: auto;
+	margin-bottom: 20px;
 }
 body{
 	background-color: #9FDAE3;
+}
+#pagination-wrapper{
+	margin: auto;
+	align-self: center;
+	float: right;
+	margin-bottom: 30px;
+	margin-right: 20px;
+}
+.foreignK{
+	color: #9FDAE3;
+}
+.foreignK:hover{
+	color: #6B9399;
 }
