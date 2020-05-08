@@ -385,8 +385,7 @@ INSERT INTO `albums` (`album_id`, `title`, `artist_id`) VALUES
 (344, 'Schubert: The Late String Quartets & String Quintet (3 CD\'s)', 272),
 (345, 'Monteverdi: L\'Orfeo', 273),
 (346, 'Mozart: Chamber Music', 274),
-(347, 'Koyaanisqatsi (Soundtrack from the Motion Picture)', 275),
-(348, 'working out', 2);
+(347, 'Koyaanisqatsi (Soundtrack from the Motion Picture)', 275);
 
 -- --------------------------------------------------------
 

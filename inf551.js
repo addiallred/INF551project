@@ -14,83 +14,33 @@
   };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-    var state = {
-    'querySet': [],
-
-    'page': 1,
-    'rows': 15,
-    'window': 5,
-}
-	var world = {
-		'city' : [], 
-		'country' : [],
-		'countrylanguage' : []
-	}
+	var world = [[], [], []];
+	var worldS = [{}, {}, {}];
+	var worldCount = [{}, {}, {}];
+	var movies = [[], [], [], [], [], []];
+	var moviesS = [{}, {}, {}, {}, {}, {}];
+	var moviesCount = [{}, {}, {}, {}, {}, {}];
+	var songs = [[], [], [], [], []];
+	var songsS = [{}, {}, {}, {}, {}];
+	var songsCount = [{}, {}, {}, {}, {}];
+	const tables = ["city", "country", "countrylanguage"];
+	var songTables = ["albums",  "tracks", "artists", "genres", "media_types"];
+	const movieTables = ["dvd_titles", "labels", "sounds", "genres", "ratings", "formats"];
 	var worldHead = [["ID", "Name", "CountryCode", "District", "Population"], 
 					["Code", "Name", "Continent", "Region", "SurfaceArea", "IndepYear", "Population", "LifeExpectancy", "GNP", "GNPOld", "LocalName", "GovernmentForm", "HeadOfState", "Capital", "Code2"], 
 					["CountryCode", "Language", "IsOfficial", "Percentage"]];
-
-	var cityFk = 2;
-
-	function pagination(querySet, page, rows) {
-
-	    var trimStart = (page - 1) * rows
-	    var trimEnd = trimStart + rows
-	    var trimmedData = [];
-	    var add = true;
-	    for(var i = trimStart; i <= trimEnd; i++){
-	    	if(i >= querySet.length){
-	    		add = false;
-	    	}
-	    	if(add){
-	    		trimmedData.push(querySet[i]);
-	    	}
-	 
-	    }
-	    var pages = Math.ceil(querySet.length / rows);
-	    return {
-	        'querySet': trimmedData,
-	        'pages': pages,
-	    }
-	}
-
-	function pageButtons(pages) {
-	    var wrapper = document.getElementById('pagination-wrapper')
-	    wrapper.innerHTML = ``
-	    var maxLeft = (state.page - Math.floor(state.window / 2))
-	    var maxRight = (state.page + Math.floor(state.window / 2))
-	    if (maxLeft < 1) {
-	        maxLeft = 1
-	        maxRight = state.window
-	    }
-	    if (maxRight > pages) {
-	        maxLeft = pages - (state.window - 1)
-	        
-	        if (maxLeft < 1){
-	        	maxLeft = 1
-	        }
-	        maxRight = pages
-	    }
-	    for (var page = maxLeft; page <= maxRight; page++) {
-	    	wrapper.innerHTML += `<button value=${page} class="page btn btn-sm btn-info">${page}</button>`
-	    }
-	    if (state.page != 1) {
-	        wrapper.innerHTML = `<button value=${1} class="page btn btn-sm btn-info">&#171; First</button>` + wrapper.innerHTML
-	    }
-
-	    if (state.page != pages) {
-	        wrapper.innerHTML += `<button value=${pages} class="page btn btn-sm btn-info">Last &#187;</button>`
-	    }
-
-	    $('.page').on('click', function() {
-	        $('#myTable').empty()
-
-	        state.page = Number($(this).val())
-	        const database = document.querySelector('#database');
-	        buildTable(database.value);
-	    })
-
-	}
+	var moviesHead = [["dvd_titles_id", "title", "release_date", "award", "label_id", "sound_id", "genre_id", "rating_id", "format_id"],
+					["label_id", "label"],
+					["sound_id", "sound"],
+					["genre_id", "genre"],
+					["rating_id", "rating"],
+					["format_id", "format"]];
+	var songsHead = [["album_id", "title", "artist_id"], 
+					["track_id", "name", "album_id", "media_type_id", "genre_id", "composer", "milliseconds", "bytes", "unit_price"],
+					["artist_id", "name"], 
+					["genre_id", "name"], 
+					["media_type_id", "name"]
+					];
 	function city(key){
 		key = key.toLowerCase();
 		var dbRef = firebase.database().ref().child("world").child("search").child("city").child(key);
@@ -101,18 +51,17 @@
 			    if(myObj != null){
 			    	for(var k = 0; k < myObj.length; k++){
 			    		var object = myObj[k];
-						world.city.push(object);
+						world[0].push(object);
 		    		}
 		       }
 			}
-			buildTable("world");
+			buildTableW();
 			
  		});
 	}
 	function primaryKeyW(key){
 		var Parent = document.getElementById("myTable");
-		while(Parent.hasChildNodes())
-		{
+		while(Parent.hasChildNodes()){
    			Parent.removeChild(Parent.firstChild);
 		}
 		var dbRef = firebase.database().ref().child("world").child("f_keys").child("countrylanguage").child(key);
@@ -123,19 +72,16 @@
 			    if(myObj != null){
 		    	for(var k = 0; k < myObj.length; k++){
 		    			var object = myObj[k];
-						world.countrylanguage.push(object);
+						world[2].push(object);
 		    	}
 		       }
 			}
 			city(key);
  		});
-		
-		
 	}
 	function foreignKeyW(key){
 		var Parent = document.getElementById("myTable");
-		while(Parent.hasChildNodes())
-		{
+		while(Parent.hasChildNodes()){
    			Parent.removeChild(Parent.firstChild);
 		}
 		var dbRef = firebase.database().ref().child("world").child("f_keys").child("country").child(key);
@@ -148,21 +94,216 @@
 						var object = myObj[k];
 						var table = myObj[k].length-1;
 						if(object[table] == "country"){
-							world.country.push(object);
+							world[1].push(object);
 						}
 						else if(object[table] == "city"){
-							world.city.push(object);
+							world[0].push(object);
 						}
 						else{
-							world.countrylanguage.push(object);
+							world[1].push(object);
 						}
 				    }
 				}
-				buildTable("world");
+				buildTableW();
 			}
 		});
-
-		
+	}
+	function buildTableM(){
+		var append = document.getElementById("addTables");
+		while(append.hasChildNodes()){
+   			append.removeChild(append.firstChild);
+		}
+		for(var i = 0; i < moviesHead.length; i++){
+			var table = document.createElement('table');
+			var headR = document.createElement('tr');
+			for(var j = 0; j < moviesHead[i].length; j++){
+				var th = document.createElement('th');
+				th.innerHTML = moviesHead[i][j].toUpperCase();
+				headR.appendChild(th);
+			}
+			table.appendChild(document.createElement('thead').appendChild(headR));
+			var data = movies[i];
+			if(data.length == 0){
+				var row = document.createElement('tr');
+				var cell = document.createElement('td');
+				cell.innerHTML = "No Results Found";
+				row.appendChild(cell);
+				table.appendChild(row);
+			}
+			for(var j = 0; j < data.length; j++){
+				var row = document.createElement('tr');
+				for(var l = 0; l < data[j].length -2; l++){
+					var cell = document.createElement('td');
+					cell.innerHTML = data[j][l];
+					if(i == 0){
+						if(l == 4){
+							cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+							    foreignKeyM(this.innerHTML, "labels", 1);
+							};
+						}
+					 	else if(l == 5){
+					 		cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+								cell.setAttribute("class", "foreignK");
+							    foreignKeyM(this.innerHTML, "sounds", 2);
+							};
+					 	}
+					 	else if(l == 6){
+					 		cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+								cell.setAttribute("class", "foreignK");
+							    foreignKeyM(this.innerHTML, "genres", 3);
+							};
+					 	}
+					 	else if(l == 7){
+					 		cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+								cell.setAttribute("class", "foreignK");
+							    foreignKeyM(this.innerHTML, "ratings", 4);
+							};
+					 	}
+					 	else if(l == 8){
+					 		cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+								cell.setAttribute("class", "foreignK");
+							    foreignKeyM(this.innerHTML, "formats", 5);
+							};
+					 	}
+					}
+					else if(l == 0 && i != 0){
+						if(i == 1){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyM(this.innerHTML, "labels", 4);
+						 	};
+						}
+						else if(i == 2){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyM(this.innerHTML, "sounds", 5);
+						 	};
+						}
+						else if(i == 3){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyM(this.innerHTML, "genres", 6);
+						 	};
+						}
+						else if(i == 4){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyM(this.innerHTML, "ratings", 7);
+						 	};
+						 }else{
+						 	cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyM(this.innerHTML, "formats", 8);
+						 	};
+						 }
+					}
+					row.appendChild(cell);
+				}
+				table.appendChild(row);
+			}
+			table.classList.add("table-dark", "table");
+			append.appendChild(table);
+		}
+		movies = [[], [], [], [], [], []];
+	    moviesS = [{}, {}, {}, {}, {}, {}];
+	    moviesCount = [{}, {}, {}, {}, {}, {}];
+	}
+	function buildTableS(){
+		var append = document.getElementById("addTables");
+		while(append.hasChildNodes()){
+   			append.removeChild(append.firstChild);
+		}
+		for(var i = 0; i < songsHead.length; i++){
+			var table = document.createElement('table');
+			var headR = document.createElement('tr');
+			for(var j = 0; j < songsHead[i].length; j++){
+				var th = document.createElement('th');
+				th.innerHTML = songsHead[i][j].toUpperCase();
+				headR.appendChild(th);
+			}
+			table.appendChild(document.createElement('thead').appendChild(headR));
+			var data = songs[i];
+			if(data.length == 0){
+				var row = document.createElement('tr');
+				var cell = document.createElement('td');
+				cell.innerHTML = "No Results Found";
+				row.appendChild(cell);
+				table.appendChild(row);
+			}
+			for(var j = 0; j < data.length; j++){
+				var row = document.createElement('tr');
+				for(var l = 0; l < data[j].length-2; l++){
+					var cell = document.createElement('td');
+					cell.innerHTML = data[j][l];
+					if(i == 0){
+						if(l == 0){
+						cell.setAttribute("class", "foreignK");
+						 cell.onclick = function(){
+						 	primaryKeyS(this.innerHTML,2 , "tracks", 1);
+						 };
+						}
+						if(l == 2){
+							cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+							    foreignKeyS(this.innerHTML, "artists", 2);
+							};
+						}
+					}
+					else if(i == 1){
+						if(l == 2){
+							cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+							    foreignKeyS(this.innerHTML, "albums", 0);
+							};
+						}
+						else if(l == 3){
+							cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+							    foreignKeyS(this.innerHTML, "media_types", 4);
+							};
+						}
+						else if(l == 4){
+							cell.setAttribute("class", "foreignK");
+							cell.onclick = function () {
+							    foreignKeyS(this.innerHTML, "genres", 3);
+							};
+						}
+					}
+					else if(l == 0 && i > 1){
+						if(i == 2){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyS(this.innerHTML, 2, "albums", 0);
+						 	};
+						}
+						else if(i == 3){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyS(this.innerHTML, 4, "tracks", 1);
+						 	};
+						}
+						else if(i == 4){
+							cell.setAttribute("class", "foreignK");
+						 	cell.onclick = function(){
+						 		primaryKeyS(this.innerHTML, 3, "tracks", 1);
+						 	};
+						}
+					}
+					row.appendChild(cell);
+				}
+				table.appendChild(row);
+			}
+			table.classList.add("table-dark", "table");
+			append.appendChild(table);
+		}
+		songs = [[], [], [], [], []];
+		songsS = [{}, {}, {}, {}, {}];
+	    songsCount = [{}, {}, {}, {}, {}];
 	}
 	function buildTableW(){
 		var append = document.getElementById("addTables");
@@ -175,17 +316,11 @@
 			var headR = document.createElement('tr');
 			for(var j = 0; j < worldHead[i].length; j++){
 				var th = document.createElement('th');
-				th.innerHTML = worldHead[i][j];
+				th.innerHTML = worldHead[i][j].toUpperCase();
 				headR.appendChild(th);
 			}
 			table.appendChild(document.createElement('thead').appendChild(headR));
-			var data = world.countrylanguage;
-			if(i == 0){
-				data = world.city;
-			}
-			else if(i == 1){
-				data = world.country;
-			}
+			var data = world[i];
 			if(data.length == 0){
 				var row = document.createElement('tr');
 				var cell = document.createElement('td');
@@ -195,11 +330,11 @@
 			}
 			for(var j = 0; j < data.length; j++){
 				var row = document.createElement('tr');
-				for(var l = 0; l < data[j].length -1; l++){
+				for(var l = 0; l < data[j].length-2; l++){
 					var cell = document.createElement('td');
 					cell.innerHTML = data[j][l];
 					if(i == 0){
-						if(l == cityFk){
+						if(l == 2){
 							cell.setAttribute("class", "foreignK");
 							cell.onclick = function () {
 							    foreignKeyW(this.innerHTML);
@@ -228,11 +363,11 @@
 			table.classList.add("table-dark", "table");
 			append.appendChild(table);
 		}
-		world.city = [];
-		world.country = [];
-		world.countrylanguage = [];
+		world = [[],[],[]];
+		worldS = [{}, {}, {}];
+	    worldCount = [{}, {}, {}];
 	}
-	function foreignKeyM(key, table){
+	function foreignKeyM(key, table, index){
 		var Parent = document.getElementById("myTable");
 		while(Parent.hasChildNodes())
 		{
@@ -245,14 +380,14 @@
 				var myObj = JSON.parse(res);
 				if(myObj != null){
 				    for(var k = 0; k < myObj.length; k++){
-				    	state.querySet.push(myObj[k]);
+				    	movies[index].push(myObj[k]);
 				    }
 				}
 			}
 			buildTable("movie");
 		});
 	}
-	function foreignKeyS(key, table){
+	function foreignKeyS(key, table, tIndex){
 		var Parent = document.getElementById("myTable");
 		while(Parent.hasChildNodes())
 		{
@@ -265,14 +400,15 @@
 				var myObj = JSON.parse(res);
 				if(myObj != null){
 				    for(var k = 0; k < myObj.length; k++){
-				    	state.querySet.push(myObj[k]);
+				    	console.log(myObj[k]);
+				    	songs[tIndex].push(myObj[k]);
 				    }
 				}
 			}
 			buildTable("song");
 		});
 	}
-	function primaryKeyS(key, index, table){
+	function primaryKeyS(key, index, table, tIndex){
 		var Parent = document.getElementById("myTable");
 		while(Parent.hasChildNodes())
 		{
@@ -286,90 +422,13 @@
 				if(myObj != null){
 				    for(var k = 0; k < myObj.length; k++){
 				    	if(myObj[k][index] == key){
-				    		state.querySet.push(myObj[k]);
+				    		songs[tIndex].push(myObj[k]);
 				    	}
 				    }
 				}
 			}
 			buildTable("song");
 		});
-	}
-	function buildTableS(){
-		var table = $('#myTable');
-		var data = pagination(state.querySet, state.page, state.rows)
-	    var table = document.getElementById("myTable");
-	    for(var i = 0; i < data.querySet.length; i++){
-			var row = table.insertRow();
-			if(data.querySet[i][data.querySet[i].length-1] == "albums"){
-				for(var l = 0; l < data.querySet[i].length-1; l++){
-					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
-					if(l == 0){
-						cell.setAttribute("class", "foreignK");
-						 cell.onclick = function(){
-						 	primaryKeyS(this.innerHTML,2 , "tracks");
-						 };
-					}
-					if(l == 2){
-						cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyS(this.innerHTML, "artists");
-						};
-					}
-				}
-			}
-			else if(data.querySet[i][data.querySet[i].length-1] == "tracks"){
-				for(var l = 0; l < data.querySet[i].length-1; l++){
-				 	var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
-					if(l == 2){
-						cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyS(this.innerHTML, "albums");
-						};
-					}
-					else if(l == 3){
-						cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyS(this.innerHTML, "media_types");
-						};
-					}
-					else if(l == 4){
-						cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyS(this.innerHTML, "genres");
-						};
-					}
-				}
-			}
-			else{
-				for(var l = 0; l < data.querySet[i].length-1; l++){
-					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
-					if(l == 0){
-						if(data.querySet[i][data.querySet[i].length-1] == "artists"){
-							cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyS(this.innerHTML, 2, "albums");
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "genres"){
-							cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyS(this.innerHTML, 4, "tracks");
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "media_types"){
-							cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyS(this.innerHTML, 3, "tracks");
-						 	};
-						}
-					}
-				}
-			}
-	    }
-	    pageButtons(data.pages)
 	}
 	function primaryKeyM(key, table, index){
 		var Parent = document.getElementById("myTable");
@@ -385,7 +444,7 @@
 				if(myObj != null){
 				    for(var k = 0; k < myObj.length; k++){
 				    	if(myObj[k][index] == key){
-				    		state.querySet.push(myObj[k]);
+				    		movies[0].push(myObj[k]);
 				    	}
 				    	
 				    }
@@ -394,184 +453,169 @@
 			buildTable("movie");
 		});
 	}
-	function buildTableM(){
-		var table = $('#myTable');
-		var data = pagination(state.querySet, state.page, state.rows)
-	    var table = document.getElementById("myTable");
-	    for(var i = 0; i < data.querySet.length; i++){
-			var row = table.insertRow();
-			if(data.querySet[i][data.querySet[i].length-1] == "dvd_titles"){
-				for(var l = 0; l < data.querySet[i].length-1; l++){
-					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
-					if(l == 4){
-						cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyM(this.innerHTML, "labels");
-						};
-					}
-				 	else if(l == 5){
-				 		cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyM(this.innerHTML, "sounds");
-						};
-				 	}
-				 	else if(l == 6){
-				 		cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyM(this.innerHTML, "genres");
-						};
-				 	}
-				 	else if(l == 7){
-				 		cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyM(this.innerHTML, "ratings");
-						};
-				 	}
-				 	else if(l == 8){
-				 		cell.setAttribute("class", "foreignK");
-						cell.onclick = function () {
-						    foreignKeyM(this.innerHTML, "formats");
-						};
-				 	}
-				}
+	function sortData(dataC, dataP, dataSet){
+		var keysSorted;
+		for(var i = 0; i < dataC.length; i++){
+			keysSorted = Object.keys(dataC[i]).sort(function(a,b){return dataC[i][b]-dataC[i][a]});
+			for(var j = 0; j < keysSorted.length; j++){
+				dataSet[i].push(dataP[i][keysSorted[j]]);
 			}
-			else{
-				for(var l = 0; l < data.querySet[i].length-1; l++){
-					var cell = row.insertCell();
-					cell.innerHTML = data.querySet[i][l];
-					if(l == 0){
-						if(data.querySet[i][data.querySet[i].length-1] == "genres"){
-						 	cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyM(this.innerHTML, "genres", 6);
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "labels"){
-						 	cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyM(this.innerHTML, "labels", 4);
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "sounds"){
-						 	cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyM(this.innerHTML, "sounds", 5);
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "ratings"){
-						 	cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyM(this.innerHTML, "ratings", 7);
-						 	};
-						}
-						else if(data.querySet[i][data.querySet[i].length-1] == "formats"){
-						 	cell.setAttribute("class", "foreignK");
-						 	cell.onclick = function(){
-						 		primaryKeyM(this.innerHTML, "formats", 8);
-						 	};
-						}
-					}
-				}
-			}
-	    }
-	    pageButtons(data.pages)
+		}
+		world = dataSet;
 	}
 	function buildTable(dataBase) {
 		if(dataBase == "world"){
+			sortData(worldCount, worldS, world);
 			buildTableW();
-			console.log(world.city);
 		}
-		else if(dataBase == "movie")
-		{
+		else if(dataBase == "movie"){
+			sortData(moviesCount, moviesS, movies);
 			buildTableM();
 		}
 		else if(dataBase == "song"){
+			sortData(songsCount, songsS, songs);
 			buildTableS();
 		}
 	}
   function worldSearch(searchInput){
   		var search = searchInput.split(" ");
-  		const tables = ["city", "country", "countrylanguage"];
   		for(var i = 0; i < tables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
 	  			var dbRef = firebase.database().ref().child("world").child("search").child(tables[i]).child(searchW);
 	  			const index = i;
+	  			const searchI = j;
+	  			const res = searchW;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot){
+				  	console.log(searchW);
 				    var res = JSON.stringify(snapshot.val());
 				    var myObj = JSON.parse(res);
 				    if(myObj != null){
 				    	for(var k = 0; k < myObj.length; k++){
-				    		state.querySet.push(myObj[k]);
-				    		if(tables[index] == "city"){
-				    			world.city.push(myObj[k]);
-				    		}
-				    		else if(tables[index] == "country"){
-				    			world.country.push(myObj[k]);
+				    		if(worldS[index].hasOwnProperty(myObj[k][0])){
+				    			worldCount[index][myObj[k][0]] += 50;
+				    			var colsNew = myObj[k][myObj[k].length-1];
+				    			var cols = worldS[index][myObj[k][0]][worldS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < colsNew.length; i++){
+				    				if(cols.includes(colsNew[i])){
+				    					worldCount[index][myObj[k][0]] += 2;
+				    				}
+				    				else{
+				    					cols.push(colsNew[i]);
+				    					worldS[index][myObj[k][0]][worldS[index][myObj[k][0]].length - 1] = cols;
+				    					worldCount[index][myObj[k][0]] += 0.001;
+				    				}
+				    			}
 				    		}
 				    		else{
-				    			world.countrylanguage.push(myObj[k]);
+				    			worldS[index][myObj[k][0]] = myObj[k];
+				    			worldCount[index][myObj[k][0]] = 50;
+				    			var cols = worldS[index][myObj[k][0]][worldS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < cols.length; i++){
+				    				worldCount[index][myObj[k][0]] += 0.001;
+				    			}
 				    		}
 				    	}
 				    }
-				    if(index == tables.length-1){
+				    if(index == tables.length-1 && searchI == search.length-1){
   						buildTable("world");
 				    }
 				   }
 				});
 	  		}
   		}
-  		console.log(world.country);
   }
 
   function movieSearch(searchInput){
   		var search = searchInput.split(" ");
-  		const tables = ["dvd_titles", "formats", "genres", "labels", "ratings", "sounds"];
-  		for(var i = 0; i < tables.length; i++){
+  		for(var i = 0; i < movieTables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("movies").child("search").child(tables[i]).child(searchW);
+	  			var dbRef = firebase.database().ref().child("movies").child("search").child(movieTables[i]).child(searchW);
 	  			const index = i;
+	  			const searchI = j;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
 				    var res = JSON.stringify(snapshot.val());
 				    var myObj = JSON.parse(res);
 				    if(myObj != null){
 				    	for(var k = 0; k < myObj.length; k++){
-				    		state.querySet.push(myObj[k]);
+				    		if(moviesS[index].hasOwnProperty(myObj[k][0])){
+				    			moviesCount[index][myObj[k][0]] += 50;
+				    			var colsNew = myObj[k][myObj[k].length-1];
+				    			var cols = moviesS[index][myObj[k][0]][moviesS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < colsNew.length; i++){
+				    				if(cols.includes(colsNew[i])){
+				    					moviesCount[index][myObj[k][0]] += 2;
+				    				}
+				    				else{
+				    					cols.push(colsNew[i]);
+				    					moviesS[index][myObj[k][0]][moviesS[index][myObj[k][0]].length - 1] = cols;
+				    					moviesCount[index][myObj[k][0]] += 0.001;
+				    				}
+				    			}
+				    		}
+				    		else{
+				    			moviesS[index][myObj[k][0]] = myObj[k];
+				    			moviesCount[index][myObj[k][0]] = 50;
+				    			var cols = moviesS[index][myObj[k][0]][moviesS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < cols.length; i++){
+				    				moviesCount[index][myObj[k][0]] += 0.001;
+				    			}
+				    		}
 				    	}
 				    }
-				    if(index == tables.length-1){
+				    if(index == movieTables.length-1 && searchI == search.length-1){
   						buildTable("movie");
 				    }
 				   }
 				});
-	  			
 	  		}
   		}
   }
 
   function songSearch(searchInput){
   		var search = searchInput.split(" ");
-  		const tables = ["albums", "artists", "formats", "genres", "media_types", "tracks"];
-  		for(var i = 0; i < tables.length; i++){
+  		for(var i = 0; i < songTables.length; i++){
 	  		for(var j = 0; j < search.length; j++){
 	  			var searchW = search[j].toLowerCase();
-	  			var dbRef = firebase.database().ref().child("songs").child("search").child(tables[i]).child(searchW);
+	  			var dbRef = firebase.database().ref().child("songs").child("search").child(songTables[i]).child(searchW);
 	  			const index = i;
+	  			const searchI = j;
 	  			dbRef.once('value', snapshot=>{
 				  if (snapshot ){
 				    var res = JSON.stringify(snapshot.val())
 				    var myObj = JSON.parse(res);
 				    if(myObj != null){
 				    	for(var k = 0; k < myObj.length; k++){
-				    		state.querySet.push(myObj[k]);
+				    		if(songsS[index].hasOwnProperty(myObj[k][0])){
+				    			songsCount[index][myObj[k][0]] += 50;
+				    			var colsNew = myObj[k][myObj[k].length-1];
+				    			var cols = songsS[index][myObj[k][0]][songsS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < colsNew.length; i++){
+				    				if(cols.includes(colsNew[i])){
+				    					songsCount[index][myObj[k][0]] += 2;
+				    				}
+				    				else{
+				    					cols.push(colsNew[i]);
+				    					songsS[index][myObj[k][0]][songsS[index][myObj[k][0]].length - 1] = cols;
+				    					songsCount[index][myObj[k][0]] += 0.001;
+				    				}
+				    			}
+				    		}
+				    		else{
+				    			songsS[index][myObj[k][0]] = myObj[k];
+				    			songsCount[index][myObj[k][0]] = 50;
+				    			var cols = songsS[index][myObj[k][0]][songsS[index][myObj[k][0]].length - 1];
+				    			for(var i = 0; i < cols.length; i++){
+				    				songsCount[index][myObj[k][0]] += 0.001;
+				    			}
+				    		}
 				    	}
 				    }
-				    if(index == tables.length-1){
-  						buildTable("song");
+				    if(index == songTables.length-1 && searchI == search.length-1){
+				      	buildTable("song");
 				    }
 				  }
 				});
@@ -579,10 +623,8 @@
 	  		}
   		}
   }
-
   document.getElementById("search-form").onsubmit = function(event){
 	event.preventDefault();
-	state.querySet = [];
 	let searchInput = document.querySelector(".form-control").value.trim();
 	const database = document.querySelector('#database');
 	var Parent = document.getElementById("myTable");
@@ -600,9 +642,3 @@
   		songSearch(searchInput);
   	}
 };
-
-
-
-
-
-
